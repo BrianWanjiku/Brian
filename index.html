@@ -2,11 +2,139 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AURELIUS TACTICAL</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { 
+            --glow: #00ff41; --bg: #050505; --warn: #ff3c3c; --dim: rgba(0, 255, 65, 0.15); 
+        }
+
+        body { 
+            background: var(--bg); color: var(--glow); font-family: 'Courier New', monospace;
+            margin: 0; padding: 15px; overflow: hidden; user-select: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+        }
+
+        .header { 
+            border-bottom: 1px solid var(--glow); padding: 10px 0; 
+            display: flex; justify-content: space-between; font-size: 11px; 
+            text-shadow: 0 0 5px var(--glow); letter-spacing: 1px;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        
+        .node { 
+            border: 1px solid var(--dim); padding: 12px; background: rgba(0,255,65,0.02); 
+            position: relative; overflow: hidden;
+        }
+
+        .label { font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; }
+        .stat { font-size: 16px; font-weight: bold; text-shadow: 0 0 8px var(--glow); }
+
+        /* Scanning Animation */
+        .scanner { 
+            height: 1px; background: var(--glow); width: 100%; position: absolute; 
+            top: 0; left: 0; animation: scan 4s infinite linear; opacity: 0.4;
+            box-shadow: 0 0 8px var(--glow);
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* Pulse for verified state */
+        .pulse { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green { 
+            0% { box-shadow: inset 0 0 5px var(--dim); }
+            50% { box-shadow: inset 0 0 15px var(--dim); }
+            100% { box-shadow: inset 0 0 5px var(--dim); }
+        }
+
+        #console { 
+            height: 110px; border: 1px solid var(--dim); margin-top: 15px; 
+            padding: 10px; font-size: 10px; overflow-y: auto; background: #000;
+        }
+        .log-entry { margin-bottom: 4px; border-left: 2px solid var(--glow); padding-left: 6px; }
+
+        .btn { 
+            width: 100%; padding: 14px; margin-top: 12px; border: 1px solid var(--glow); 
+            background: transparent; color: var(--glow); font-family: 'Courier New';
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+        }
+        .btn:active { background: var(--glow); color: #000; }
+        .btn-warn { border-color: var(--warn); color: var(--warn); margin-top: 20px; }
+        .btn-warn:active { background: var(--warn); color: #fff; }
+
+        .critical-blink { color: var(--warn); animation: blink 0.8s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
 </head>
 <body>
+    <div class="header">
+        <span>AURELIUS_SYS_v4.5</span>
+        <span id="clock">00:00:00</span>
+    </div>
 
+    <div class="grid">
+        <div class="node pulse"><div class="scanner"></div><span class="label">IDENTITY</span><span class="stat" id="id-status">SCANNING</span></div>
+        <div class="node"><span class="label">GHOST_MODE</span><span class="stat" id="ghost-status">OFF</span></div>
+        <div class="node"><span class="label">VAULT_RAM</span><span class="stat" id="vault-status">DECRYPTED</span></div>
+        <div class="node"><span class="label">CORE_LOAD</span><span class="stat" id="load-status">0%</span></div>
+    </div>
+
+    <div id="console"><div class="log-entry">> SECURE LINK ESTABLISHED...</div></div>
+
+    <button class="btn" onclick="act('stealth')">TOGGLE STEALTH</button>
+    <button class="btn" onclick="act('snapshot')">ENCRYPT MEMORY</button>
+    <button class="btn btn-warn" onclick="purge()">IMMEDIATE PURGE</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        function log(m) {
+            const e = document.createElement('div');
+            e.className = 'log-entry';
+            e.innerText = `> ${new Date().toLocaleTimeString()}: ${m}`;
+            const c = document.getElementById('console');
+            c.prepend(e);
+        }
+
+        async function act(type) {
+            tg.HapticFeedback.impactOccurred('medium');
+            log(`CMD: ${type.toUpperCase()}`);
+            try {
+                // Replace with your HTTPS Tailscale/Ngrok URL
+                await fetch(`https://YOUR_DOMAIN.com/action/${type}`, {method: 'POST'});
+            } catch(e) { log("ERR: NODE OFFLINE"); }
+        }
+
+        function purge() {
+            tg.showConfirm("INITIATE PURGE? RAM will be wiped and hardware locked.", (c) => {
+                if(c) { tg.HapticFeedback.notificationOccurred('error'); act('purge'); }
+            });
+        }
+
+        async function sync() {
+            try {
+                const r = await fetch('https://YOUR_DOMAIN.com/status');
+                const d = await r.json();
+                document.getElementById('id-status').innerText = d.identity;
+                document.getElementById('ghost-status').innerText = d.ghost_mode;
+                document.getElementById('vault-status').innerText = d.vault_status;
+                document.getElementById('load-status').innerText = d.load;
+
+                if(d.ghost_mode === "ACTIVE") {
+                    document.getElementById('ghost-status').className = "stat critical-blink";
+                } else {
+                    document.getElementById('ghost-status').className = "stat";
+                }
+            } catch(e) {}
+        }
+
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+        setInterval(sync, 3000);
+    </script>
 </body>
 </html>
