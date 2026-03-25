@@ -1,8 +1,8 @@
-# 🛰️ AURELIUS-V4.5-NODE
+# 🛰️ AURELIUS-NODE
 
 > **[INTERNAL ACCESS ONLY]** Biometrically-Gated Autonomous Intelligence Proxy.
 
-Aurelius v4.5 is a Sovereign Node—a hardware-integrated AI system that operates on a Zero-Trust, physical-presence-first model. Unlike standard LLM wrappers, Aurelius ties the digital "mind" to the Admin's physical DNA, implementing a hard-lock on volatile RAM and system sensors during Admin absence.
+Aurelius is a Sovereign Node—a hardware-integrated AI system that operates on a Zero-Trust, physical-presence-first model. Unlike standard LLM wrappers, Aurelius ties the digital "mind" to the Admin's physical DNA, implementing a hard-lock on volatile RAM and system sensors during Admin absence.
 
 ## 🛠️ System Architecture (The 5-Loop Heartbeat)
 | Loop | Class | Primary Protocol |
