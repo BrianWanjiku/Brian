@@ -1,0 +1,136 @@
+:root { 
+    --glow: #00ff41; 
+    --bg: #050505; 
+    --warn: #ff3c3c; 
+    --dim-glow: rgba(0, 255, 65, 0.2);
+}
+
+body { 
+    background: var(--bg); 
+    color: var(--glow); 
+    font-family: 'Courier New', monospace; 
+    margin: 0; 
+    padding: 20px;
+    overflow: hidden; 
+    user-select: none;
+    /* CRT Scanline Effect */
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+}
+
+/* Top HUD */
+.header { 
+    border-bottom: 2px solid var(--glow); 
+    padding: 10px 0; 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 14px; 
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--glow);
+}
+
+/* Tactical Grid */
+.grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    margin-top: 25px; 
+}
+
+.node { 
+    border: 1px solid var(--dim-glow); 
+    padding: 15px; 
+    background: rgba(0, 255, 65, 0.03); 
+    position: relative; 
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.label { 
+    font-size: 10px; 
+    opacity: 0.6; 
+    display: block; 
+    margin-bottom: 5px;
+}
+
+.stat { 
+    font-size: 18px; 
+    font-weight: bold; 
+    display: block; 
+    text-shadow: 0 0 8px var(--glow);
+}
+
+/* POI-style Vertical Scanner */
+.scanner { 
+    height: 1px; 
+    background: var(--glow); 
+    width: 100%; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    animation: scan 4s infinite linear; 
+    opacity: 0.8;
+    box-shadow: 0 0 10px var(--glow);
+}
+
+@keyframes scan { 
+    0% { top: 0; } 
+    100% { top: 100%; } 
+}
+
+/* Console Terminal */
+#console { 
+    height: 120px; 
+    border: 1px solid var(--dim-glow); 
+    margin-top: 20px; 
+    padding: 12px; 
+    font-size: 11px; 
+    overflow-y: auto; 
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 0 10px #000;
+}
+
+.log-entry { 
+    margin-bottom: 6px; 
+    border-left: 2px solid var(--glow); 
+    padding-left: 8px; 
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Buttons */
+.btn { 
+    width: 100%; 
+    padding: 15px; 
+    margin-top: 15px; 
+    border: 1px solid var(--glow); 
+    background: transparent; 
+    color: var(--glow); 
+    font-family: 'Courier New', monospace;
+    font-weight: bold; 
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.btn:hover { 
+    background: var(--dim-glow); 
+    box-shadow: 0 0 15px var(--glow);
+}
+
+.btn:active { 
+    background: var(--glow); 
+    color: #000; 
+}
+
+.btn-kill { 
+    border-color: var(--warn); 
+    color: var(--warn); 
+    margin-top: 30px; 
+}
+
+.btn-kill:hover { 
+    background: rgba(255, 60, 60, 0.1); 
+    box-shadow: 0 0 15px var(--warn); 
+}
