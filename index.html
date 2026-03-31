@@ -3,222 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="color-scheme" content="dark">
-    <title>AURELIUS TACTICAL v4.5</title>
+    <title>AURELIUS v4.5 | Neural Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BrianWanjiku/Brian/main/icon.png">
+
     <style>
-        /* --- 1. CORE THEME & CRT EFFECTS --- */
-        :root {
-            --glow: #00ff41;
-            --bg: #050505;
-            --warn: #ff3c3c;
-            --dim: rgba(0, 255, 65, 0.15);
-            --surface: rgba(255, 255, 255, 0.03);
-            --border: rgba(0, 255, 65, 0.3);
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background: var(--bg);
-            color: var(--glow);
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0; padding: 20px;
-            height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column;
-            /* CRT FX Layer */
-            background-image: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
-            background-size: 100% 3px, 3px 100%;
-            animation: flicker 0.15s infinite;
-        }
-
-        @keyframes flicker { 0% { opacity: 0.99; } 50% { opacity: 1; } 100% { opacity: 0.98; } }
-
-        /* --- 2. THE GLITCH PROTOCOL --- */
-        .glitch-active {
-            animation: screen-shake 0.2s infinite, color-distort 0.15s infinite !important;
-            filter: hue-rotate(90deg) contrast(2) brightness(1.2);
-        }
-
-        @keyframes screen-shake {
-            0% { transform: translate(0,0); }
-            25% { transform: translate(-3px, 2px); }
-            50% { transform: translate(3px, -2px); }
-            100% { transform: translate(0,0); }
-        }
-
-        @keyframes color-distort {
-            0% { clip-path: inset(80% 0 1% 0); transform: translateX(-5px); }
-            20% { clip-path: inset(10% 0 60% 0); transform: translateX(5px); }
-            40% { clip-path: inset(40% 0 43% 0); transform: translateX(-3px); }
-            60% { clip-path: inset(1% 0 80% 0); transform: translateX(3px); }
-            100% { clip-path: inset(80% 0 1% 0); }
-        }
-
-        /* --- 3. UI COMPONENTS --- */
-        .header {
-            border-bottom: 1px solid var(--glow);
-            padding: 10px 0; display: flex; justify-content: space-between;
-            font-size: 11px; letter-spacing: 2px; text-shadow: 0 0 8px var(--glow);
-            margin-bottom: 20px;
-        }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        .node {
-            border: 1px solid var(--border);
-            padding: 15px; background: var(--surface);
-            position: relative; overflow: hidden;
-            transition: border 0.3s ease;
-        }
-
-        .node::after {
-            content: ""; height: 1px; background: var(--glow); width: 100%;
-            position: absolute; top: 0; left: 0;
-            animation: scan 3s infinite linear; opacity: 0.5;
-            box-shadow: 0 0 10px var(--glow);
-        }
-
-        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
-
-        .label { font-size: 9px; opacity: 0.5; display: block; margin-bottom: 5px; }
-        .stat { font-size: 16px; font-weight: bold; text-shadow: 0 0 10px var(--glow); }
-
-        #console {
-            flex-grow: 1; border: 1px solid var(--border);
-            margin-top: 20px; padding: 12px; font-size: 10px;
-            overflow-y: auto; background: rgba(0, 0, 0, 0.6);
-            box-shadow: inset 0 0 20px #000;
-        }
-
-        .log-entry {
-            margin-bottom: 6px; border-left: 2px solid var(--glow);
-            padding-left: 8px; animation: typeIn 0.2s ease-out;
-        }
-
-        @keyframes typeIn { from { transform: translateX(-5px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* --- 4. BUTTONS --- */
-        .btn {
-            width: 100%; padding: 15px; margin-top: 10px;
-            border: 1px solid var(--glow); background: transparent;
-            color: var(--glow); font-family: inherit; font-weight: bold;
-            text-transform: uppercase; cursor: pointer; transition: 0.2s;
-        }
-
-        .btn:active { background: var(--glow); color: #000; box-shadow: 0 0 20px var(--glow); }
-        .btn-kill { border-color: var(--warn); color: var(--warn); margin-top: 20px; }
-        .btn-kill:active { background: var(--warn); color: #fff; }
-
-        .pulse { animation: statusPulse 2s infinite ease-in-out; }
-        @keyframes statusPulse {
-            0%, 100% { border-color: var(--border); }
-            50% { border-color: var(--glow); box-shadow: 0 0 10px var(--dim); }
-        }
-
-        .critical-blink { color: var(--warn); animation: blink 0.8s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap');
+        :root { --neon-cyan: #00ffff; --neon-blue: #00d4ff; }
+        body { background: #020617; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; }
+        .neural-glow { background: linear-gradient(45deg, #00ffff08, #00d4ff15); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 255, 0.2); box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); }
+        .crt-overlay { pointer-events: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.005), rgba(0, 0, 255, 0.01)); background-size: 100% 4px, 4px 100%; z-index: 50; }
+        #neural-canvas { width: 100%; height: 160px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; transition: background-color 0.3s ease; }
+        ::-webkit-scrollbar { width: 2px; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-cyan); }
     </style>
 </head>
-<body>
+<body class="p-4">
+    <div class="crt-overlay"></div>
 
-    <div class="header">
-        <span>AURELIUS_TACTICAL_v4.5</span>
-        <span id="clock">00:00:00</span>
+    <div class="neural-glow rounded-lg mb-4 overflow-hidden relative">
+        <div class="absolute top-2 left-3 z-10 flex items-center gap-4">
+            <h1 class="text-xs font-bold text-cyan-400 font-['Orbitron'] tracking-widest">AURELIUS v4.5</h1>
+            <span id="stat-admin" class="text-[10px] bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30 transition-all">SCANNING...</span>
+        </div>
+        <div id="neural-canvas"></div>
+        <div class="absolute bottom-2 right-3 z-10 text-[9px] text-cyan-500/70 tracking-tighter">
+            NODE_LOAD: <span id="stat-load" class="text-white">--%</span> | SEC_INTEGRITY: <span id="stat-sec" class="text-white">--%</span>
+        </div>
     </div>
 
-    <div class="grid">
-        <div class="node pulse"><span class="label">IDENTITY</span><span class="stat" id="id-status">SCANNING</span></div>
-        <div class="node"><span class="label">GHOST_MODE</span><span class="stat" id="ghost-status">OFF</span></div>
-        <div class="node"><span class="label">VAULT_RAM</span><span class="stat" id="vault-status">DECRYPTED</span></div>
-        <div class="node"><span class="label">CORE_LOAD</span><span class="stat" id="load-status">0%</span></div>
+    <div class="flex gap-4 h-[calc(100vh-270px)]">
+        <div class="w-1/3 flex flex-col gap-2">
+            <div class="neural-glow p-3 rounded flex flex-col gap-4 flex-grow">
+                <div class="text-[9px] uppercase tracking-tighter text-slate-500">Sensor Stream</div>
+                <div class="space-y-3">
+                    <div class="text-[9px] font-bold"><span id="dot-vision" class="status-dot bg-slate-600"></span>VISION: <span id="val-vision" class="text-cyan-400">WAIT</span></div>
+                    <div class="text-[9px] font-bold"><span id="dot-audio" class="status-dot bg-slate-600"></span>AUDIO: <span id="val-audio" class="text-cyan-400">WAIT</span></div>
+                    <div class="text-[9px] font-bold"><span id="dot-env" class="status-dot bg-slate-600"></span>ENV: <span id="val-env" class="text-cyan-400">WAIT</span></div>
+                    <div class="text-[9px] font-bold"><span id="dot-bio" class="status-dot bg-slate-600"></span>BIO: <span id="val-bio" class="text-slate-500">IDLE</span></div>
+                </div>
+                
+                <div class="mt-auto border-t border-cyan-500/20 pt-2">
+                    <div class="text-[8px] text-slate-500 mb-1 uppercase tracking-widest">Confidence</div>
+                    <div class="w-full bg-slate-800 h-1 rounded overflow-hidden">
+                        <div id="bar-conf" class="bg-cyan-400 h-full w-[0%] transition-all duration-700"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-2/3 flex flex-col gap-2">
+            <div id="chat-stream" class="neural-glow rounded p-3 flex-grow overflow-y-auto text-[10px] space-y-2 leading-relaxed">
+                <div class="text-cyan-500/50 italic">[BOOT]: Handshaking with eatmorevegetables.tailb7c548.ts.net...</div>
+            </div>
+            <div class="flex gap-1">
+                <input type="text" id="cmd-input" placeholder="Neural Command..." class="bg-cyan-950/20 border border-cyan-500/30 rounded-l px-3 py-2 text-xs w-full outline-none focus:border-cyan-400 transition-all">
+                <button onclick="triggerVoice()" class="bg-cyan-900/50 border-y border-cyan-500/30 px-3 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-colors">🎤</button>
+                <button onclick="sendChat()" class="bg-cyan-500 text-black px-4 rounded-r font-bold text-[10px] uppercase tracking-tighter">SEND</button>
+            </div>
+        </div>
     </div>
 
-    <div id="console"><div class="log-entry">> SECURE MESH LINK ACTIVE. READY.</div></div>
-
-    <button class="btn" onclick="act('stealth')">TOGGLE STEALTH</button>
-    <button class="btn" onclick="act('snapshot')">FORCE SNAPSHOT</button>
-    <button class="btn btn-kill" onclick="purge()">IMMEDIATE PURGE</button>
+    <div class="grid grid-cols-4 gap-2 mt-4">
+        <button onclick="act('lock')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 transition-transform">🔒 Lock</button>
+        <button onclick="act('mesh')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 transition-transform">🔄 Mesh</button>
+        <button onclick="act('retrain')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 transition-transform">🧠 Retrain</button>
+        <button onclick="act('purge')" class="neural-glow border-red-500/40 py-3 rounded text-[9px] font-bold uppercase text-red-400 active:bg-red-500/20">🛡️ Purge</button>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.enableClosingConfirmation();
-
-        // TAILSCALE MAGICDNS ADDRESS
+        
+        // Tailscale MagicDNS from your node list
         const NODE_URL = "http://eatmorevegetables.tailb7c548.ts.net:8000";
 
-        let isGlitching = false;
-
-        function log(m) {
-            const e = document.createElement('div');
-            e.className = 'log-entry';
-            e.innerText = `> ${m}`;
-            const c = document.getElementById('console');
-            c.prepend(e);
-        }
-
-        function triggerSecurityGlitch(duration = 500) {
-            if (isGlitching) return; 
-            isGlitching = true;
-            document.body.classList.add('glitch-active');
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-            setTimeout(() => {
-                document.body.classList.remove('glitch-active');
-                isGlitching = false;
-            }, duration);
-        }
-
-        async function act(type) {
-            tg.HapticFeedback.impactOccurred('light');
-            log(`CMD: ${type.toUpperCase()}`);
-
+        // 1. DATA SYNC: Displaying Actual Backend Metrics
+        async function syncTelemetry() {
             try {
-                const response = await fetch(`${NODE_URL}/action/${type}`, { 
-                    method: 'POST',
-                    mode: 'cors'
-                });
-                if (!response.ok) throw new Error("Offline");
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch(e) { 
-                log("ERR: NODE_OFFLINE - CHECK MESH"); 
-                triggerSecurityGlitch(300);
+                const r = await fetch(`${NODE_URL}/status`);
+                if (!r.ok) throw new Error();
+                const d = await r.json();
+
+                // Update Telemetry Header
+                document.getElementById('stat-load').innerText = `${d.load}%`;
+                document.getElementById('stat-sec').innerText = `${d.security_integrity}%`;
+                
+                const adminEl = document.getElementById('stat-admin');
+                adminEl.innerText = d.identity === "ADMIN" ? "ADMIN: ✅" : "UNAUTHORIZED: ❌";
+                adminEl.className = d.identity === "ADMIN" ? 
+                    "text-[10px] bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/50 text-cyan-400" : 
+                    "text-[10px] bg-red-500/10 px-2 py-0.5 rounded border border-red-500/50 text-red-400";
+
+                // Update Confidence Bar
+                document.getElementById('bar-conf').style.width = `${(d.confidence || 0) * 100}%`;
+
+                // Update Sensors
+                updateSensor('vision', d.sensors.vision);
+                updateSensor('audio', d.sensors.audio);
+                updateSensor('env', d.sensors.env);
+
+            } catch(e) {
+                document.getElementById('stat-admin').innerText = "NODE_OFFLINE";
+                document.getElementById('stat-admin').className = "text-[10px] bg-red-900/20 px-2 py-0.5 rounded border border-red-500/50 text-red-500";
             }
         }
 
-        function purge() {
-            tg.showConfirm("INITIATE PURGE? Volatile RAM will be wiped and system locked.", (confirmed) => {
-                if(confirmed) {
-                    triggerSecurityGlitch(1500);
-                    act('purge');
-                }
-            });
+        function updateSensor(id, data) {
+            if(!data) return;
+            document.getElementById(`val-${id}`).innerText = data.status;
+            const dot = document.getElementById(`dot-${id}`);
+            dot.className = `status-dot ${data.active ? (id === 'vision' ? 'bg-red-500 shadow-[0_0_8px_red]' : 'bg-cyan-400 shadow-[0_0_8px_cyan]') : 'bg-slate-600'}`;
         }
 
-        async function sync() {
+        // 2. COMMANDS: POST Requests to Tailscale Node
+        async function act(type) {
+            tg.HapticFeedback.impactOccurred('medium');
+            appendLog('SYSTEM', `Initiating protocol: ${type.toUpperCase()}`);
             try {
-                const r = await fetch(`${NODE_URL}/status`);
-                const d = await r.json();
-                
-                document.getElementById('id-status').innerText = d.identity;
-                document.getElementById('ghost-status').innerText = d.ghost_mode;
-                document.getElementById('vault-status').innerText = d.vault_status;
-                document.getElementById('load-status').innerText = d.load;
-
-                if(d.identity === "UNAUTHORIZED") triggerSecurityGlitch(800);
-                
-                const gs = document.getElementById('ghost-status');
-                gs.className = d.ghost_mode === "ACTIVE" ? "stat critical-blink" : "stat";
-            } catch(e) { /* Mesh transition */ }
+                const r = await fetch(`${NODE_URL}/action/${type}`, { method: 'POST' });
+                if (r.ok) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    appendLog('JARVIS', `${type.toUpperCase()} command acknowledged.`);
+                }
+            } catch(e) {
+                appendLog('ERROR', `Handshake failed. Check Tailscale node.`);
+                tg.HapticFeedback.notificationOccurred('error');
+            }
         }
 
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
+        async function sendChat() {
+            const input = document.getElementById('cmd-input');
+            const val = input.value;
+            if(!val) return;
+            
+            appendLog('BRIAN', val);
+            input.value = '';
+            tg.HapticFeedback.selectionChanged();
 
-        setInterval(sync, 3000); 
+            try {
+                const r = await fetch(`${NODE_URL}/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: val })
+                });
+                const d = await r.json();
+                appendLog('JARVIS', d.response);
+            } catch(e) {
+                appendLog('JARVIS', 'Signal lost. Link unstable.');
+            }
+        }
+
+        function triggerVoice() {
+            tg.HapticFeedback.impactOccurred('heavy');
+            appendLog('SYSTEM', 'Voice Module: Listening...');
+        }
+
+        function appendLog(sender, text) {
+            const log = document.getElementById('chat-stream');
+            const entry = document.createElement('div');
+            entry.className = sender === 'BRIAN' ? 'text-white font-bold ml-2 border-l-2 border-white/20 pl-2' : 'text-cyan-400 opacity-80';
+            entry.innerText = `[${sender}]: ${text}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // 3D Neural Visualization Logic
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 160, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth - 40, 160);
+        document.getElementById('neural-canvas').appendChild(renderer.domElement);
+        
+        const brain = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(2.2, 1), 
+            new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.15 })
+        );
+        scene.add(brain);
+        camera.position.z = 5;
+
+        function animate() { 
+            requestAnimationFrame(animate); 
+            brain.rotation.y += 0.003; 
+            brain.rotation.x += 0.001;
+            const scale = 1 + Math.sin(Date.now() * 0.001) * 0.03;
+            brain.scale.set(scale, scale, scale);
+            renderer.render(scene, camera); 
+        }
+        animate();
+
+        // 3-second sync interval for real-time telemetry
+        setInterval(syncTelemetry, 3000);
+        document.getElementById('cmd-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChat(); });
     </script>
 </body>
 </html>
