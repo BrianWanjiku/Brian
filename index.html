@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="dark">
+    <title>AURELIUS TACTICAL v4.5</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* --- 1. CORE THEME & CRT EFFECTS --- */
+        :root {
+            --glow: #00ff41;
+            --bg: #050505;
+            --warn: #ff3c3c;
+            --dim: rgba(0, 255, 65, 0.15);
+            --surface: rgba(255, 255, 255, 0.03);
+            --border: rgba(0, 255, 65, 0.3);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg);
+            color: var(--glow);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0; padding: 20px;
+            height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column;
+            /* CRT FX Layer */
+            background-image: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+            background-size: 100% 3px, 3px 100%;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker { 0% { opacity: 0.99; } 50% { opacity: 1; } 100% { opacity: 0.98; } }
+
+        /* --- 2. THE GLITCH PROTOCOL --- */
+        .glitch-active {
+            animation: screen-shake 0.2s infinite, color-distort 0.15s infinite !important;
+            filter: hue-rotate(90deg) contrast(2) brightness(1.2);
+        }
+
+        @keyframes screen-shake {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(-3px, 2px); }
+            50% { transform: translate(3px, -2px); }
+            100% { transform: translate(0,0); }
+        }
+
+        @keyframes color-distort {
+            0% { clip-path: inset(80% 0 1% 0); transform: translateX(-5px); }
+            20% { clip-path: inset(10% 0 60% 0); transform: translateX(5px); }
+            40% { clip-path: inset(40% 0 43% 0); transform: translateX(-3px); }
+            60% { clip-path: inset(1% 0 80% 0); transform: translateX(3px); }
+            100% { clip-path: inset(80% 0 1% 0); }
+        }
+
+        /* --- 3. UI COMPONENTS --- */
+        .header {
+            border-bottom: 1px solid var(--glow);
+            padding: 10px 0; display: flex; justify-content: space-between;
+            font-size: 11px; letter-spacing: 2px; text-shadow: 0 0 8px var(--glow);
+            margin-bottom: 20px;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .node {
+            border: 1px solid var(--border);
+            padding: 15px; background: var(--surface);
+            position: relative; overflow: hidden;
+            transition: border 0.3s ease;
+        }
+
+        .node::after {
+            content: ""; height: 1px; background: var(--glow); width: 100%;
+            position: absolute; top: 0; left: 0;
+            animation: scan 3s infinite linear; opacity: 0.5;
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+
+        .label { font-size: 9px; opacity: 0.5; display: block; margin-bottom: 5px; }
+        .stat { font-size: 16px; font-weight: bold; text-shadow: 0 0 10px var(--glow); }
+
+        #console {
+            flex-grow: 1; border: 1px solid var(--border);
+            margin-top: 20px; padding: 12px; font-size: 10px;
+            overflow-y: auto; background: rgba(0, 0, 0, 0.6);
+            box-shadow: inset 0 0 20px #000;
+        }
+
+        .log-entry {
+            margin-bottom: 6px; border-left: 2px solid var(--glow);
+            padding-left: 8px; animation: typeIn 0.2s ease-out;
+        }
+
+        @keyframes typeIn { from { transform: translateX(-5px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* --- 4. BUTTONS --- */
+        .btn {
+            width: 100%; padding: 15px; margin-top: 10px;
+            border: 1px solid var(--glow); background: transparent;
+            color: var(--glow); font-family: inherit; font-weight: bold;
+            text-transform: uppercase; cursor: pointer; transition: 0.2s;
+        }
+
+        .btn:active { background: var(--glow); color: #000; box-shadow: 0 0 20px var(--glow); }
+        .btn-kill { border-color: var(--warn); color: var(--warn); margin-top: 20px; }
+        .btn-kill:active { background: var(--warn); color: #fff; }
+
+        .pulse { animation: statusPulse 2s infinite ease-in-out; }
+        @keyframes statusPulse {
+            0%, 100% { border-color: var(--border); }
+            50% { border-color: var(--glow); box-shadow: 0 0 10px var(--dim); }
+        }
+
+        .critical-blink { color: var(--warn); animation: blink 0.8s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span>AURELIUS_TACTICAL_v4.5</span>
+        <span id="clock">00:00:00</span>
+    </div>
+
+    <div class="grid">
+        <div class="node pulse"><span class="label">IDENTITY</span><span class="stat" id="id-status">SCANNING</span></div>
+        <div class="node"><span class="label">GHOST_MODE</span><span class="stat" id="ghost-status">OFF</span></div>
+        <div class="node"><span class="label">VAULT_RAM</span><span class="stat" id="vault-status">DECRYPTED</span></div>
+        <div class="node"><span class="label">CORE_LOAD</span><span class="stat" id="load-status">0%</span></div>
+    </div>
+
+    <div id="console"><div class="log-entry">> SECURE MESH LINK ACTIVE. READY.</div></div>
+
+    <button class="btn" onclick="act('stealth')">TOGGLE STEALTH</button>
+    <button class="btn" onclick="act('snapshot')">FORCE SNAPSHOT</button>
+    <button class="btn btn-kill" onclick="purge()">IMMEDIATE PURGE</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // TAILSCALE MAGICDNS ADDRESS
+        const NODE_URL = "http://eatmorevegetables.tailb7c548.ts.net:8000";
+
+        let isGlitching = false;
+
+        function log(m) {
+            const e = document.createElement('div');
+            e.className = 'log-entry';
+            e.innerText = `> ${m}`;
+            const c = document.getElementById('console');
+            c.prepend(e);
+        }
+
+        function triggerSecurityGlitch(duration = 500) {
+            if (isGlitching) return; 
+            isGlitching = true;
+            document.body.classList.add('glitch-active');
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+            setTimeout(() => {
+                document.body.classList.remove('glitch-active');
+                isGlitching = false;
+            }, duration);
+        }
+
+        async function act(type) {
+            tg.HapticFeedback.impactOccurred('light');
+            log(`CMD: ${type.toUpperCase()}`);
+
+            try {
+                const response = await fetch(`${NODE_URL}/action/${type}`, { 
+                    method: 'POST',
+                    mode: 'cors'
+                });
+                if (!response.ok) throw new Error("Offline");
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch(e) { 
+                log("ERR: NODE_OFFLINE - CHECK MESH"); 
+                triggerSecurityGlitch(300);
+            }
+        }
+
+        function purge() {
+            tg.showConfirm("INITIATE PURGE? Volatile RAM will be wiped and system locked.", (confirmed) => {
+                if(confirmed) {
+                    triggerSecurityGlitch(1500);
+                    act('purge');
+                }
+            });
+        }
+
+        async function sync() {
+            try {
+                const r = await fetch(`${NODE_URL}/status`);
+                const d = await r.json();
+                
+                document.getElementById('id-status').innerText = d.identity;
+                document.getElementById('ghost-status').innerText = d.ghost_mode;
+                document.getElementById('vault-status').innerText = d.vault_status;
+                document.getElementById('load-status').innerText = d.load;
+
+                if(d.identity === "UNAUTHORIZED") triggerSecurityGlitch(800);
+                
+                const gs = document.getElementById('ghost-status');
+                gs.className = d.ghost_mode === "ACTIVE" ? "stat critical-blink" : "stat";
+            } catch(e) { /* Mesh transition */ }
+        }
+
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        setInterval(sync, 3000); 
+    </script>
+</body>
+</html>
