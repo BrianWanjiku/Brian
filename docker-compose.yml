@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  aurelius:
+    build: .
+    container_name: sovereign_v4.5
+    privileged: true
+    devices:
+      - /dev/video0:/dev/video0  # Webcam pass-through for OpenCV tracking
+      - /dev/snd:/dev/snd        # Audio card pass-through for PyAudio
+    environment:
+      - DISPLAY=$DISPLAY
+      - ADMIN_FACE_PATH=admin_photo.jpg
+    volumes:
+      - .:/app
+    network_mode: host

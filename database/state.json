@@ -1,0 +1,45 @@
+{
+  "working_memory": {
+    "current_goal_focus": null,
+    "conversation_buffer": [
+      {
+        "user": "hello jar",
+        "jarvis": "(No API key) You said: hello jar"
+      },
+      {
+        "user": "are you okay",
+        "jarvis": "(No API key) You said: are you okay"
+      },
+      {
+        "user": "hi Jarvis",
+        "jarvis": "(No API key) You said: hi Jarvis"
+      },
+      {
+        "user": "hi",
+        "jarvis": "(No API key) You said: hi"
+      },
+      {
+        "user": "how are you",
+        "jarvis": "I encountered an error: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https:/"
+      },
+      {
+        "user": "what's the weather",
+        "jarvis": "I encountered an error: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https:/"
+      },
+      {
+        "user": "hey",
+        "jarvis": "I encountered an error: No module named 'jiter.jiter'"
+      },
+      {
+        "user": "hey",
+        "jarvis": "I encountered an error: No module named 'jiter.jiter'"
+      }
+    ],
+    "system_mood": "neutral",
+    "current_mode": "Drafting",
+    "creative_alignment": 0,
+    "last_interaction": "2026-03-22T00:46:48.945740",
+    "session_start": "2026-03-22T02:23:49.305670"
+  },
+  "saved_at": "2026-03-22T02:24:19.306845"
+}

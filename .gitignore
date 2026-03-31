@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+venv/
+data/*.db
+*.key
+*.crt
+.env
+*.key
+*.crt
+*.db
