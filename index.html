@@ -32,7 +32,7 @@
             <div class="neural-glow p-3 rounded flex flex-col gap-4 flex-grow text-center">
                 <div class="text-[9px] uppercase tracking-tighter text-slate-500">MESH_TELEMETRY</div>
                 <div class="space-y-4 pt-2">
-                    <div class="text-[9px] font-bold"><span id="dot-vision" class="status-dot bg-slate-600"></span>VIS: <span id="val-vision" class="text-slate-500">WAIT</span></div>
+                    <div class="text-[9px] font-bold"><span id="dot-vision" class="status-dot bg-slate-600"></span>VIS: <span id="val-vision" class="text-slate-500">READY</span></div>
                     <div class="text-[9px] font-bold"><span id="dot-bio" class="status-dot bg-slate-600"></span>BIO: <span id="val-bio" class="text-slate-500">IDLE</span></div>
                 </div>
             </div>
@@ -40,7 +40,7 @@
 
         <div class="w-2/3 flex flex-col gap-2">
             <div id="chat-stream" class="neural-glow rounded p-3 flex-grow overflow-y-auto text-[10px] space-y-2">
-                <div class="text-white/30 italic">[SYSTEM]: Establish Biometric Link...</div>
+                <div class="text-white/30 italic">[SYSTEM]: Link Established via Origin...</div>
             </div>
             
             <div class="flex gap-1">
@@ -53,17 +53,18 @@
 
     <div id="control-grid" class="grid grid-cols-4 gap-2 mt-4 opacity-20 pointer-events-none">
         <button onclick="act('lock')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase text-red-400">🔒 Lock</button>
-        <button onclick="act('cam')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase admin-only">📷 Cam</button>
+        <button onclick="act('cam')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase">📷 Cam</button>
         <button onclick="act('aux')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase text-yellow-500">👤 Aux</button>
-        <button onclick="act('purge')" class="neural-glow border-red-500/40 py-3 rounded text-[9px] font-bold uppercase text-red-600 admin-only">🛡️ PURGE</button>
+        <button onclick="act('purge')" class="neural-glow border-red-500/40 py-3 rounded text-[9px] font-bold uppercase text-red-600">🛡️ PURGE</button>
     </div>
 
     <video id="hidden-video" class="hidden" autoplay playsinline muted></video>
     <canvas id="hidden-canvas" class="hidden"></canvas>
 
     <script>
-        // --- HARDCODED TAILSCALE IP ---
-        const NODE_URL = "http://100.73.30.56:8000";
+        // --- ADAPTIVE ORIGIN TARGETING ---
+        // Setting to empty string forces the browser to use the current host/port.
+        const NODE_URL = ""; 
         
         async function syncTelemetry() {
             try {
@@ -82,23 +83,26 @@
             const root = document.documentElement;
             const adminEl = document.getElementById('stat-admin');
             
-            if (role === "ADMIN") {
-                root.style.setProperty('--theme-color', '#00ffff');
-                adminEl.innerText = `ADMIN: ${data.identity} ✅`;
-                adminEl.className = "text-[10px] bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-500 text-cyan-400 font-bold";
-                document.getElementById('dot-bio').className = "status-dot bg-cyan-400";
+            if (role === "ADMIN" || role === "AUX") {
+                const isFullAdmin = role === "ADMIN";
+                root.style.setProperty('--theme-color', isFullAdmin ? '#00ffff' : '#eab308');
+                adminEl.innerText = `${role}: ${data.identity} ✅`;
+                adminEl.className = `text-[10px] px-2 py-0.5 rounded border font-bold ${isFullAdmin ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-yellow-500/20 border-yellow-500 text-yellow-400'}`;
+                document.getElementById('dot-bio').className = `status-dot ${isFullAdmin ? 'bg-cyan-400' : 'bg-yellow-400'}`;
+                
+                // Unlock Console
+                document.getElementById('cmd-input').disabled = false;
+                document.getElementById('cmd-input').placeholder = "COMMAND_ENTRY_ACTIVE";
+                document.getElementById('cmd-input').classList.remove('opacity-50');
+                document.getElementById('btn-send').classList.remove('hidden');
+                document.getElementById('btn-remote-auth').classList.add('hidden');
+                document.getElementById('control-grid').style.opacity = "1";
+                document.getElementById('control-grid').style.pointerEvents = "auto";
             } else {
                 root.style.setProperty('--theme-color', '#475569');
                 adminEl.innerText = "LOCKED 🔒";
                 adminEl.className = "text-[10px] bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase";
             }
-
-            const isGuest = role === "GUEST";
-            document.getElementById('cmd-input').disabled = isGuest;
-            document.getElementById('btn-send').classList.toggle('hidden', isGuest);
-            document.getElementById('btn-remote-auth').classList.toggle('hidden', !isGuest);
-            document.getElementById('control-grid').style.opacity = isGuest ? "0.2" : "1";
-            document.getElementById('control-grid').style.pointerEvents = isGuest ? "none" : "auto";
         }
 
         async function captureRemote() {
@@ -125,11 +129,11 @@
                     })
                     .then(r => r.json())
                     .then(d => {
-                        appendLog('SYSTEM', `BIO_RESULT: ${d.role}`);
-                        syncTelemetry();
+                        appendLog('SYSTEM', `AUTH_RESPONSE: ${d.role}`);
+                        updateUI(d);
                     })
                     .catch(err => {
-                        appendLog('ERROR', 'POST_FAILED: Check CORS/Handshake');
+                        appendLog('ERROR', 'HANDSHAKE_REJECTED');
                     });
                 }, 1000);
             } catch (err) { appendLog('ERROR', 'CAMERA_BLOCKED'); }
@@ -144,6 +148,7 @@
             log.scrollTop = log.scrollHeight;
         }
 
+        // --- VISUALS ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, (window.innerWidth - 40) / 160, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
