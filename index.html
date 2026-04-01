@@ -5,174 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>AURELIUS v4.5 | Neural Control</title>
+    <title>AURELIUS v5.0 | Neural Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BrianWanjiku/Brian/main/icon.png">
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap');
-        :root { --neon-cyan: #00ffff; }
-        body { background: #020617; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; padding-top: env(safe-area-inset-top); }
-        .neural-glow { background: linear-gradient(45deg, #00ffff08, #00d4ff15); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 255, 0.2); }
+        :root { --theme-color: #475569; } /* Default Gen-Pop Grey */
+        body { background: #020617; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; padding-top: env(safe-area-inset-top); transition: all 0.5s ease; }
+        .neural-glow { background: linear-gradient(45deg, rgba(255,255,255,0.02), rgba(255,255,255,0.05)); backdrop-filter: blur(12px); border: 1px solid var(--theme-color); }
         .crt-overlay { pointer-events: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.005), rgba(0, 0, 255, 0.01)); background-size: 100% 4px, 4px 100%; z-index: 50; }
         #neural-canvas { width: 100%; height: 160px; }
         .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .admin-only, .aux-only { transition: opacity 0.3s; }
+        .locked-blur { filter: blur(8px); pointer-events: none; opacity: 0.3; }
     </style>
 </head>
 <body class="p-4">
     <div class="crt-overlay"></div>
 
     <div id="cam-container" class="hidden fixed top-24 right-6 w-40 h-32 neural-glow rounded overflow-hidden z-40 border-cyan-500/50">
-        <div class="absolute top-1 left-1 z-50 text-[7px] bg-black/60 px-1 text-cyan-400 font-bold uppercase">LIVE_FEED</div>
         <img id="video-stream" src="" class="w-full h-full object-cover grayscale contrast-125">
     </div>
 
     <div class="neural-glow rounded-lg mb-4 overflow-hidden relative">
         <div class="absolute top-2 left-3 z-10 flex items-center gap-4">
-            <h1 class="text-xs font-bold text-cyan-400 font-['Orbitron'] tracking-widest text-shadow-sm">AURELIUS v4.5</h1>
-            <span id="stat-admin" class="text-[10px] bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30 transition-all uppercase">SCANNING...</span>
+            <h1 class="text-xs font-bold font-['Orbitron'] tracking-widest text-shadow-sm" style="color: var(--theme-color)">AURELIUS v5.0</h1>
+            <span id="stat-admin" class="text-[10px] bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase">SCANNING...</span>
         </div>
         <div id="neural-canvas"></div>
-        <div class="absolute bottom-2 right-3 z-10 text-[9px] text-cyan-500/70 tracking-tighter">
-            LOAD: <span id="stat-load" class="text-white">--%</span> | SEC: <span id="stat-sec" class="text-white">--%</span>
-        </div>
     </div>
 
-    <div class="flex gap-4 h-[calc(100vh-340px)]">
+    <div id="main-console" class="flex gap-4 h-[calc(100vh-340px)]">
         <div class="w-1/3 flex flex-col gap-2">
             <div class="neural-glow p-3 rounded flex flex-col gap-4 flex-grow">
                 <div class="text-[9px] uppercase tracking-tighter text-slate-500">Sensors</div>
                 <div class="space-y-3">
-                    <div class="text-[9px] font-bold"><span id="dot-vision" class="status-dot bg-slate-600"></span>VIS: <span id="val-vision" class="text-cyan-400">WAIT</span></div>
-                    <div class="text-[9px] font-bold"><span id="dot-audio" class="status-dot bg-slate-600"></span>AUD: <span id="val-audio" class="text-cyan-400">WAIT</span></div>
-                    <div class="text-[9px] font-bold"><span id="dot-env" class="status-dot bg-slate-600"></span>ENV: <span id="val-env" class="text-cyan-400">WAIT</span></div>
-                    <div class="text-[9px] font-bold"><span id="dot-bio" class="status-dot bg-slate-600"></span>BIO: <span id="val-bio" class="text-slate-500">IDLE</span></div>
-                </div>
-                <div class="mt-auto border-t border-cyan-500/20 pt-2">
-                    <div class="text-[8px] text-slate-500 mb-1 uppercase">Confidence</div>
-                    <div class="w-full bg-slate-800 h-1 rounded overflow-hidden">
-                        <div id="bar-conf" class="bg-cyan-400 h-full w-[0%] transition-all duration-500"></div>
-                    </div>
+                    <div class="text-[9px] font-bold"><span id="dot-vision" class="status-dot bg-slate-600"></span>VIS: <span id="val-vision">WAIT</span></div>
+                    <div class="text-[9px] font-bold"><span id="dot-bio" class="status-dot bg-slate-600"></span>BIO: <span id="val-bio">IDLE</span></div>
                 </div>
             </div>
         </div>
 
         <div class="w-2/3 flex flex-col gap-2">
             <div id="chat-stream" class="neural-glow rounded p-3 flex-grow overflow-y-auto text-[10px] space-y-2 leading-relaxed">
-                <div class="text-cyan-500/50 italic">[BOOT]: Handshaking with Mesh...</div>
+                <div class="text-white/30 italic">[SYSTEM]: Establish Biometric Link...</div>
             </div>
+            
             <div class="flex gap-1">
-                <input type="text" id="cmd-input" placeholder="Neural Command..." class="bg-cyan-950/20 border border-cyan-500/30 rounded-l px-3 py-2 text-xs w-full outline-none focus:border-cyan-400 transition-all">
-                <button onclick="triggerVoice()" class="bg-cyan-900/40 border-y border-cyan-500/30 px-3 text-cyan-400 text-xs">🎤</button>
-                <button onclick="sendChat()" class="bg-cyan-500 text-black px-4 rounded-r font-bold text-[10px] uppercase">SEND</button>
+                <input type="text" id="cmd-input" placeholder="LOCKED: BIOMETRIC AUTH REQUIRED" disabled class="bg-black/40 border border-white/10 rounded px-3 py-2 text-xs w-full outline-none opacity-50">
+                <button id="btn-remote-auth" onclick="captureRemote()" class="bg-white/10 text-white px-3 rounded text-[10px] font-bold uppercase">📸 AUTH</button>
+                <button id="btn-send" onclick="sendChat()" class="hidden bg-white text-black px-4 rounded font-bold text-[10px]">SEND</button>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-4 gap-2 mt-4">
-        <button onclick="act('lock')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 text-red-400">🔒 Lock</button>
-        <button onclick="triggerWake()" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 text-cyan-400">🔓 Wake</button>
-        <button onclick="toggleCamera()" id="btn-cam" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 text-slate-500">📷 Cam</button>
-        <button onclick="act('aux')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95 text-yellow-500 border-yellow-500/30">👤 Aux</button>
-        
-        <button onclick="act('mesh')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95">🔄 Mesh</button>
-        <button onclick="act('retrain')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase active:scale-95">🧠 Retrain</button>
-        <button onclick="act('purge')" class="neural-glow border-red-500/40 py-3 rounded text-[9px] font-bold uppercase text-red-600 col-span-2 active:bg-red-900/20">🛡️ SYSTEM PURGE</button>
+    <div id="control-grid" class="grid grid-cols-4 gap-2 mt-4 opacity-20 pointer-events-none">
+        <button onclick="act('lock')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase text-red-400">🔒 Lock</button>
+        <button onclick="toggleCamera()" class="neural-glow py-3 rounded text-[9px] font-bold uppercase admin-only">📷 Cam</button>
+        <button onclick="act('aux')" class="neural-glow py-3 rounded text-[9px] font-bold uppercase text-yellow-500">👤 Aux</button>
+        <button onclick="act('purge')" class="neural-glow border-red-500/40 py-3 rounded text-[9px] font-bold uppercase text-red-600 col-span-1 admin-only">🛡️ PURGE</button>
     </div>
+
+    <video id="hidden-video" class="hidden" autoplay playsinline></video>
+    <canvas id="hidden-canvas" class="hidden"></canvas>
 
     <script>
         const tg = window.Telegram.WebApp;
         const NODE_URL = "http://eatmorevegetables.tailb7c548.ts.net:8000";
-        let camActive = false;
+        let currentRole = "GUEST";
 
         async function syncTelemetry() {
             try {
                 const r = await fetch(`${NODE_URL}/status`);
                 const d = await r.json();
-                document.getElementById('stat-load').innerText = `${d.load}%`;
-                document.getElementById('stat-sec').innerText = `${d.security_integrity}%`;
-                
-                const adminEl = document.getElementById('stat-admin');
-                if (d.identity === "ADMIN") {
-                    adminEl.innerText = "ADMIN: ✅"; adminEl.className = "text-[10px] bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/50 text-cyan-400";
-                } else if (d.identity === "AUX_ADMIN") {
-                    adminEl.innerText = "AUX_ADMIN: ⚠️"; adminEl.className = "text-[10px] bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/50 text-yellow-500";
-                } else {
-                    adminEl.innerText = "UNAUTHORIZED: ❌"; adminEl.className = "text-[10px] bg-red-500/10 px-2 py-0.5 rounded border border-red-500/50 text-red-500";
-                }
-
-                document.getElementById('bar-conf').style.width = `${(d.confidence || 0) * 100}%`;
-                updateSensor('vision', d.sensors.vision);
-                updateSensor('audio', d.sensors.audio);
-                updateSensor('env', d.sensors.env);
+                updateUI(d);
             } catch(e) { document.getElementById('stat-admin').innerText = "NODE_OFFLINE"; }
         }
 
-        async function toggleCamera() {
-            try {
-                const r = await fetch(`${NODE_URL}/action/toggle_cam`, { method: 'POST' });
-                const d = await r.json();
-                camActive = d.status === "VISIBLE";
-                document.getElementById('cam-container').classList.toggle('hidden', !camActive);
-                document.getElementById('video-stream').src = camActive ? `${NODE_URL}/video_feed` : "";
-                document.getElementById('btn-cam').classList.toggle('text-cyan-400', camActive);
-            } catch(e) { appendLog('ERROR', 'Camera Link Failed.'); }
+        function updateUI(data) {
+            const role = data.role || "GUEST";
+            const root = document.documentElement;
+            const adminEl = document.getElementById('stat-admin');
+            const cmdInput = document.getElementById('cmd-input');
+            const controlGrid = document.getElementById('control-grid');
+            
+            // 1. Set Theme & Colors
+            if (role === "ADMIN") {
+                root.style.setProperty('--theme-color', '#00ffff');
+                adminEl.className = "text-[10px] bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-500 text-cyan-400 font-bold";
+                adminEl.innerText = "ADMIN: BRIAN ✅";
+            } else if (role === "AUX_ADMIN") {
+                root.style.setProperty('--theme-color', '#fbbf24');
+                adminEl.className = "text-[10px] bg-yellow-500/20 px-2 py-0.5 rounded border border-yellow-500 text-yellow-500 font-bold";
+                adminEl.innerText = "AUX: VERONICA ⚠️";
+            } else {
+                root.style.setProperty('--theme-color', '#475569');
+                adminEl.innerText = "GEN_POP: LOCKED 🔒";
+            }
+
+            // 2. Lock/Unlock Interaction
+            const isGuest = role === "GUEST";
+            cmdInput.disabled = isGuest;
+            cmdInput.placeholder = isGuest ? "LOCKED: BIOMETRIC AUTH REQUIRED" : "Neural Command...";
+            cmdInput.style.opacity = isGuest ? "0.5" : "1";
+            document.getElementById('btn-send').classList.toggle('hidden', isGuest);
+            document.getElementById('btn-remote-auth').classList.toggle('hidden', !isGuest);
+            controlGrid.style.opacity = isGuest ? "0.2" : "1";
+            controlGrid.style.pointerEvents = isGuest ? "none" : "auto";
+
+            // 3. Hide/Show Role Specifics
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', role !== 'ADMIN'));
         }
 
-        async function triggerWake() {
-            const pass = prompt("Enter Authorization Key:");
-            if (!pass) return;
-            try {
-                await fetch(`${NODE_URL}/action/wake`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ key: pass }) });
-                appendLog('JARVIS', 'Hardware Reactivated.');
-            } catch(e) { appendLog('ERROR', 'Wake Failed.'); }
+        async function captureRemote() {
+            const video = document.getElementById('hidden-video');
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            video.srcObject = stream;
+            
+            setTimeout(() => {
+                const canvas = document.getElementById('hidden-canvas');
+                canvas.width = 300; canvas.height = 300;
+                canvas.getContext('2d').drawImage(video, 0, 0, 300, 300);
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                stream.getTracks().forEach(t => t.stop());
+                
+                fetch(`${NODE_URL}/remote_auth`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ image_data: base64 })
+                }).then(r => r.json()).then(d => {
+                    appendLog('SYSTEM', `BIO_CHECK: ${d.role}`);
+                    syncTelemetry();
+                });
+            }, 1000);
         }
 
-        function triggerVoice() { tg.HapticFeedback.impactOccurred('medium'); appendLog('SYSTEM', 'Voice Module: Listening...'); }
-
-        function updateSensor(id, data) {
-            if(!data) return;
-            document.getElementById(`val-${id}`).innerText = data.status;
-            document.getElementById(`dot-${id}`).className = `status-dot ${data.active ? 'bg-cyan-400 shadow-[0_0_8px_cyan]' : 'bg-slate-600'}`;
-        }
-
-        async function act(type) {
-            appendLog('SYSTEM', `Protocol: ${type.toUpperCase()}`);
-            tg.HapticFeedback.selectionChanged();
-            try { await fetch(`${NODE_URL}/action/${type}`, { method: 'POST' }); } catch(e) { appendLog('ERROR', 'Signal Lost.'); }
-        }
-
-        async function sendChat() {
-            const input = document.getElementById('cmd-input');
-            const val = input.value; if(!val) return;
-            appendLog('BRIAN', val); input.value = '';
-            try {
-                const r = await fetch(`${NODE_URL}/chat`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ message: val }) });
-                const d = await r.json(); appendLog('JARVIS', d.response);
-            } catch(e) { appendLog('JARVIS', 'Signal lost.'); }
-        }
-
-        function appendLog(sender, text) {
+        // Standard helpers...
+        function appendLog(s, t) {
             const log = document.getElementById('chat-stream');
             const entry = document.createElement('div');
-            entry.className = sender === 'BRIAN' ? 'text-white font-bold ml-2 border-l-2 border-white/10 pl-2' : 'text-cyan-400 opacity-80';
-            entry.innerText = `[${sender}]: ${text}`;
-            log.appendChild(entry); log.scrollTop = log.scrollHeight;
+            entry.className = s === 'BRIAN' ? 'text-white' : 'text-cyan-400';
+            entry.innerText = `[${s}]: ${t}`;
+            log.appendChild(entry);
         }
 
+        // Three.js Brain logic
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, (window.innerWidth - 40) / 160, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth - 40, 160);
         document.getElementById('neural-canvas').appendChild(renderer.domElement);
-        const brain = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.15 }));
+        const brain = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.1 }));
         scene.add(brain); camera.position.z = 5;
-        function animate() { requestAnimationFrame(animate); brain.rotation.y += 0.003; brain.rotation.x += 0.001; renderer.render(scene, camera); }
+        function animate() { 
+            requestAnimationFrame(animate); 
+            brain.material.color.set(getComputedStyle(document.documentElement).getPropertyValue('--theme-color'));
+            brain.rotation.y += 0.003; 
+            renderer.render(scene, camera); 
+        }
         animate();
         setInterval(syncTelemetry, 3000);
-        document.getElementById('cmd-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChat(); });
     </script>
 </body>
 </html>
