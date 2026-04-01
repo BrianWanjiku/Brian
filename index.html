@@ -62,13 +62,13 @@
     <canvas id="hidden-canvas" class="hidden"></canvas>
 
     <script>
-        // --- TAILSCALE TARGETING ---
-        // Primary: MagicDNS | Fallback: 100.73.30.56
-        const NODE_URL = "https://eatmorevegetables.tailb7c548.ts.net:8000";
+        // --- HARDCODED TAILSCALE IP ---
+        const NODE_URL = "http://100.73.30.56:8000";
         
         async function syncTelemetry() {
             try {
                 const r = await fetch(`${NODE_URL}/status`);
+                if (!r.ok) throw new Error();
                 const d = await r.json();
                 updateUI(d);
             } catch(e) { 
@@ -90,6 +90,7 @@
             } else {
                 root.style.setProperty('--theme-color', '#475569');
                 adminEl.innerText = "LOCKED 🔒";
+                adminEl.className = "text-[10px] bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase";
             }
 
             const isGuest = role === "GUEST";
@@ -126,6 +127,9 @@
                     .then(d => {
                         appendLog('SYSTEM', `BIO_RESULT: ${d.role}`);
                         syncTelemetry();
+                    })
+                    .catch(err => {
+                        appendLog('ERROR', 'POST_FAILED: Check CORS/Handshake');
                     });
                 }, 1000);
             } catch (err) { appendLog('ERROR', 'CAMERA_BLOCKED'); }
@@ -140,7 +144,6 @@
             log.scrollTop = log.scrollHeight;
         }
 
-        // --- Visuals ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, (window.innerWidth - 40) / 160, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
